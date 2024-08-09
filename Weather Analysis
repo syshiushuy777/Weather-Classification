@@ -1,0 +1,197 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+
+data=pd.read_csv('weather_classification_data.csv')
+data.head(5) #phân tích bảng vẽ kết quả khi vẽ ra
+
+data.info() #loại dữ liệu
+
+data.describe() #phân bố dữ liệu
+
+data.groupby("Season").count() #Xem dữ liệu mỗi lớp
+sns.pairplot(data=data, hue="Season") #Xem và vẽ mối quan hệ giữa các đặc trưng với target
+
+data.groupby("Weather Type").count()
+sns.pairplot(data=data, hue="Weather Type")
+
+import random
+import numpy as np
+import pandas as pd
+import os
+from prettytable import PrettyTable
+import seaborn as sns
+import missingno as msno
+import matplotlib.pyplot as plt
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+pd.set_option('display.max_columns', None)
+def distribution_of_target(target, dataframe):
+    cat_cols = [feature
+                for feature in dataframe.columns
+                if (dataframe[feature].dtype != 'O' and dataframe[feature].nunique() <100)
+                or (dataframe[feature].dtype == 'O' and feature not in [target])
+                ]
+
+    for column in cat_cols:
+        contingency_table = pd.crosstab(dataframe[column], dataframe[target], normalize='index')
+        contingency_table.plot(kind="bar", stacked=True, figsize=(20, 4))
+
+        plt.title(f"Distribution of {target} across {column}")
+        plt.xlabel(column)
+        plt.ylabel("Percentage")
+        plt.legend(title=target)
+
+        plt.show()
+
+distribution_of_target("Weather Type", data) #Phân bố dữ liệu theo Weather Type
+
+distribution_of_target("Season", data) #Phân bố dữ liệu theo Season
+
+distribution_of_target("Location", data) #Phân bố dữ liệu theo Location
+
+distribution_of_target("Cloud Cover", data) #phân bố dữ liệu theo Cloud
+
+#Ss Season vs Location
+plt.subplots(figsize=(9, 9))
+df_2dhist = pd.DataFrame({
+    x_label: grp['Location'].value_counts()
+    for x_label, grp in data.groupby('Season')
+})
+sns.heatmap(df_2dhist, cmap='viridis')
+plt.xlabel('Season')
+_ = plt.ylabel('Location')
+
+#Ss Season vs Cloud Cover
+plt.subplots(figsize=(9, 9))
+df_2dhist = pd.DataFrame({
+    x_label: grp['Season'].value_counts()
+    for x_label, grp in data.groupby('Cloud Cover')
+})
+sns.heatmap(df_2dhist, cmap='viridis')
+plt.xlabel('Cloud Cover')
+_ = plt.ylabel('Season')
+
+#Ss Season vs Temperature 
+figsize = (12, 1.2 * len(data['Season'].unique()))
+plt.figure(figsize=figsize)
+sns.violinplot(data, x='Temperature', y='Season', inner='box', palette='Dark2')
+sns.despine(top=True, right=True, bottom=True, left=True)
+
+
+#Sự thay đổi của nhiệt độ
+
+#Change of temperature depending on UV Index 
+plt.figure(figsize = (15, 10))
+temperature_on_uv = data.groupby("UV Index")["Temperature"].mean()
+fig, axes = plt.subplots(nrows = 1, ncols = 2, figsize = (14, 6))
+temperature_on_uv.plot(kind = 'line', ax = axes[1], color = 'skyblue', marker = 'o')
+axes[1].set_title('Change of Temperature depending on UV Index')
+axes[1].set_xlabel('UV Index')
+axes[1].set_ylabel('Average Temperature')
+axes[1].grid(True)
+plt.tight_layout()
+plt.show()
+
+#Change of temperature depending on precipitation
+plt.figure(figsize = (15, 10))
+precipitation_on_temperature = data.groupby("Precipitation (%)")["Temperature"].mean()
+precipitation_on_temperature.plot(kind = "line")
+plt.title('Change of Temperature depending on Precipitation (%)')
+plt.xlabel('Precipitation (%)')
+plt.ylabel('Average Temperature')
+plt.grid(True)
+plt.show()
+
+#Change of temperature depending on visibility
+mean_visibility = data.groupby('Visibility (km)')['Temperature'].mean()
+plt.figure(figsize=(12,6))
+plt.plot(mean_visibility.index,mean_visibility.values)
+plt.title('Change of Temperature depending on Visibility (km)')
+plt.xlabel('Visibility')
+plt.ylabel('Average Temperature')
+plt.grid(True)
+plt.show()
+plt.close()
+
+#Change of temperature depending on humidity
+mean_humidity = data.groupby('Humidity')['Temperature'].mean()
+plt.figure(figsize=(12,6))
+plt.plot(mean_humidity.index,mean_humidity.values)
+plt.title('Change of Temperature depending on Humidity')
+plt.xlabel('Humidity')
+plt.ylabel('Average Temperature')
+plt.grid(True)
+plt.show()
+plt.close()
+
+#Change of temperature depending on atmospheric pressure
+mean_atmpress = data.groupby("Atmospheric Pressure")['Temperature'].mean()
+plt.figure(figsize=(20,6))
+plt.plot(mean_atmpress.index,mean_atmpress.values)
+plt.title('Change of Temperature depending on Atmospheric Pressure')
+plt.xlabel('Atmospheric Pressure')
+plt.ylabel('Temperature')
+plt.grid(True)
+plt.show()
+plt.close()
+
+#Change of temperature depending on wind speed
+mean_wspeed = data.groupby("Wind Speed")['Temperature'].mean()
+plt.figure(figsize=(12,6))
+plt.plot(mean_wspeed.index,mean_wspeed.values)
+plt.title('Change of Temperature depending on Wind Speed')
+plt.xlabel('Wind Speed')
+plt.ylabel('Temperature')
+plt.grid(True)
+plt.show()
+plt.close()
+
+
+#Sự thay đổi của độ ẩm so với các chỉ số
+
+#Change of humidity depending on temperature
+plt.figure(figsize=(15, 10))
+temperature_on_humidity=data.groupby("Temperature")["Humidity"].mean()
+temperature_on_humidity.plot(kind="line")
+plt.title('Changes of Humidity depending on Temperature')
+plt.ylabel('Humidity (%)')
+plt.xlabel('Temperature (Celcius Degree)')
+plt.grid(True)
+plt.show()
+
+#Change of humidity depending on visibility
+plt.figure(figsize=(15, 10))
+humidity_on_visibility=data.groupby("Visibility (km)")["Humidity"].mean()
+humidity_on_visibility.plot(kind="line")
+plt.title('Changes of Humidity depending on Visibility')
+plt.ylabel('Humidity (%)')
+plt.xlabel('Visibility (km)')
+plt.grid(True)
+plt.show()
+
+#Change of humidity depending on wind speed
+plt.figure(figsize=(20, 10))
+humidity_on_wind_speed=data.groupby("Wind Speed")["Humidity"].mean()
+humidity_on_wind_speed.plot(kind='line')
+plt.title('Change of Humidity depending on Wind Speed')
+plt.xlabel('Wind Speed')
+plt.ylabel('Humidity')
+plt.grid(True)
+plt.show()
+
+#Change of humidity depending on atmospheric pressure
+plt.figure(figsize=(20,10))
+humidity_on_atmospheric_pressure=data.groupby("Atmospheric Pressure")["Humidity"].mean()
+humidity_on_atmospheric_pressure.plot(kind='line')
+plt.title('Change of Humidity depending on Atmospheric Pressure')
+plt.xlabel('Atmospheric Pressure')
+plt.ylabel('Humidity')
+plt.grid(True)
+plt.show()
